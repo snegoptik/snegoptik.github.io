@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Сохранённые карты — Зенит</title>
+  <style>html,body{background:#110f0d;color:#fbf6ee}</style>
+  <link rel="stylesheet" href="css/site.css?v=6" />
+</head>
+<body>
+  <header class="topbar sans">
+    <a class="logo" href="index.html">Зенит</a>
+    <nav class="top-nav">
+      <a href="natal.html">Карта</a>
+      <a href="karty.html" aria-current="page">Карты</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <p class="kicker">Память</p>
+    <h1>Сохранённые карты</h1>
+    <p class="lead">Пока без аккаунта: список живёт в этом браузере. Так можно держать себя, пару и ребёнка, не пересчитывая каждый раз.</p>
+    <div id="list" class="chart-list"></div>
+    <a class="btn" href="index.html">Построить новую</a>
+    <p class="small">Когда появится кабинет, эти же карты можно будет перенести. Считать по-прежнему можно без регистрации.</p>
+  </main>
+  <footer class="site wrap"><p><a href="index.html">На главную</a> · <a href="etika.html">Этика</a></p></footer>
+  <nav class="bottom-nav">
+    <a href="index.html">Карта</a>
+    <a href="para.html">Пара</a>
+    <a href="den.html">День</a>
+    <a href="zayavka.html">Заявка</a>
+  </nav>
+  <script src="js/site.js?v=4"></script>
+  <script>
+    function render() {
+      const list = Zenit.loadCharts();
+      const root = document.getElementById("list");
+      if (!list.length) {
+        root.innerHTML = '<div class="card"><p style="margin:0">Пока пусто. Постройте карту и нажмите «Сохранить» — имя можно дать любое: Я, Мама, Партнёр.</p></div>';
+        return;
+      }
+      root.innerHTML = list.map(function (c) {
+        const q = Zenit.natalQuery(c);
+        const when = Zenit.formatRuDate(c.date) + (c.time ? ", " + c.time : "") + ", " + c.city;
+        return '<article class="chart-item"><strong>' + c.name + "</strong><span class=\"meta\">" + when + "</span>" +
+          '<div class="chart-actions">' +
+          '<a href="natal.html?' + q + '">Открыть</a>' +
+          '<a href="otchet.html?' + q + '">Разбор</a>' +
+          '<button type="button" data-use="' + c.id + '">Текущая для «сегодня»</button>' +
+          '<button type="button" data-del="' + c.id + '">Удалить</button>' +
+          "</div></article>";
+      }).join("");
+      root.querySelectorAll("[data-del]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          Zenit.deleteChart(btn.getAttribute("data-del"));
+          render();
+        });
+      });
+      root.querySelectorAll("[data-use]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const id = btn.getAttribute("data-use");
+          const row = Zenit.loadCharts().filter(function (c) { return c.id === id; })[0];
+          if (!row) return;
+          Zenit.saveNatal(row);
+          location.href = "den.html";
+        });
+      });
+    }
+    render();
+  </script>
+</body>
+</html>

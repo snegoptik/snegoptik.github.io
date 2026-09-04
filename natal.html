@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Натальная карта — Зенит</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23f4efe6' stroke='%236e3b32'/><circle cx='32' cy='32' r='6' fill='%231c1916'/></svg>" />
+  <style>html,body{background:#110f0d;color:#fbf6ee}</style>
+  <link rel="stylesheet" href="css/site.css?v=9" />
+</head>
+<body>
+  <header class="topbar sans">
+    <a class="logo" href="index.html">Зенит</a>
+    <nav class="top-nav">
+      <a href="natal.html" aria-current="page">Карта</a>
+      <a href="para.html">Пара</a>
+      <a href="den.html">Таро</a>
+    </nav>
+  </header>
+
+  <main class="wrap sky">
+    <div id="form-block">
+      <p class="kicker">Натал</p>
+      <h1>Построить карту</h1>
+      <form class="form sans" action="natal.html" method="get">
+        <div class="birth-fields" data-birth id="birth-natal" data-date-name="date" data-time-name="time" data-date="1994-08-25"></div>
+        <label for="city">Город</label>
+        <input id="city" name="city" type="text" list="cities" value="Москва" autocomplete="off" required />
+        <datalist id="cities" data-cities></datalist>
+        <button class="btn" type="submit">Построить карту</button>
+        <p class="hint">Без времени Солнце и Луна считаются, асцендент помечаем как неточный.</p>
+        <p class="hint">Города — крупные центры, не каждый посёлок. Своего нет — ближайший: Солнце почти не сдвинется, асцендент может на градус. <a href="metod.html#gorod">Почему не все</a></p>
+      </form>
+    </div>
+
+    <div id="result" hidden>
+      <p class="kicker" id="result-kicker">Натал</p>
+      <h1>Карта построена</h1>
+      <div id="time-warning" class="notice" hidden>Время рождения не указано. Асцендент и дома приблизительные: без часа ось карты плавает. Солнце и Луна — точные.</div>
+      <div id="tz-note" class="notice" hidden></div>
+      <div class="wheel-wrap">
+        <svg class="wheel-svg" id="wheel" aria-label="Колесо натальной карты"></svg>
+      </div>
+      <p class="wheel-hint">Наведите или нажмите на знак — имя и стихия.</p>
+      <div class="big3" id="big3"></div>
+      <div class="sheet">
+      <div class="tabs" role="tablist">
+        <button type="button" class="on" data-tab="short">Коротко</button>
+        <button type="button" data-tab="planets">Планеты</button>
+        <button type="button" data-tab="houses">Дома</button>
+        <button type="button" data-tab="aspects">Аспекты</button>
+      </div>
+      <section class="panel on" id="tab-short"></section>
+      <section class="panel" id="tab-planets"></section>
+      <section class="panel" id="tab-houses"></section>
+      <section class="panel" id="tab-aspects"></section>
+      <p class="small" style="margin-top:16px">Ниже можно сохранить карту на этом телефоне и открыть более длинный разбор. Сам расчёт не прячем за оплату.</p>
+      <form class="form" id="save-box" style="margin-top:12px">
+        <label for="chart-name">Имя карты</label>
+        <div class="save-row">
+          <input id="chart-name" type="text" maxlength="40" value="Я" autocomplete="nickname" />
+          <button class="btn" type="submit" id="save-chart">Сохранить</button>
+        </div>
+        <p class="hint" id="save-hint">Без аккаунта: карты остаются в этом браузере. Потом можно будет перенести в кабинет, чтобы не потерять при смене телефона.</p>
+      </form>
+      <div class="actions">
+        <a class="btn" href="otchet.html" id="full-report">Полный разбор</a>
+        <a class="btn btn-ghost" href="den.html">Акцент на сегодня</a>
+        <a class="btn btn-ghost" href="para.html" id="add-partner">Добавить второго человека</a>
+        <a class="btn btn-ghost" href="karty.html">Сохранённые карты</a>
+      </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site wrap">
+    <p><a href="metod.html">Как мы считаем</a> · <a href="etika.html">Этика</a> · <a href="index.html">На главную</a></p>
+  </footer>
+  <nav class="bottom-nav">
+    <a href="index.html" aria-current="page">Карта</a>
+    <a href="para.html">Пара</a>
+    <a href="den.html">День</a>
+    <a href="zayavka.html">Заявка</a>
+  </nav>
+
+  <script src="js/vendor/astronomy.browser.min.js"></script>
+  <script src="js/cities.js?v=2"></script>
+  <script src="js/natal.js?v=7"></script>
+  <script src="js/texts.js?v=2"></script>
+  <script src="js/site.js?v=5"></script>
+  <script src="js/birth-fields.js"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      let date = params.get("date");
+      let time = params.get("time") || "";
+      let cityName = params.get("city") || "Москва";
+      const saved = Zenit.loadNatal();
+      if (!date && saved) {
+        date = saved.date;
+        time = saved.time || "";
+        cityName = saved.city || cityName;
+      }
+      if (date) {
+        BirthFields.fill(document.getElementById("birth-natal"), date, time);
+        document.getElementById("city").value = cityName;
+      }
+      if (!date) return;
+
+      const cityObj = findCity(cityName);
+      if (!cityObj) {
+        document.getElementById("form-block").insertAdjacentHTML("afterbegin", '<p class="notice">Этого города нет в списке — не из скупости, а потому что без истории пояса полный справочник врал бы асценденту. Возьмите ближайший крупный центр. <a href="metod.html#gorod">Почему так</a></p>');
+        return;
+      }
+
+      cityName = cityObj.name;
+      const chart = computeChart({ date: date, time: time, city: cityName, cityObj: cityObj });
+      Zenit.saveNatal({ date: date, time: time, city: cityName });
+
+      document.getElementById("form-block").hidden = true;
+      const result = document.getElementById("result");
+      result.hidden = false;
+
+      const when = Zenit.formatRuDate(date) + (time ? ", " + time : ", время не указано") + ", " + cityObj.name;
+      document.getElementById("result-kicker").textContent = "Натал · " + when;
+      if (chart.unknownTime) document.getElementById("time-warning").hidden = false;
+      if (chart.tzNote) {
+        const tzEl = document.getElementById("tz-note");
+        tzEl.hidden = false;
+        tzEl.textContent = chart.tzNote;
+      }
+
+      drawWheel(document.getElementById("wheel"), chart);
+
+      document.getElementById("big3").innerHTML =
+        "<div><small>Солнце</small><b>" + chart.sun.sign.name + "</b></div>" +
+        "<div><small>Луна</small><b>" + chart.moon.sign.name + "</b></div>" +
+        "<div><small><a href=\"slovar/ascendent.html\">Асцендент</a></small><b>" + (chart.asc ? chart.asc.name : "нет времени") + "</b></div>";
+
+      document.getElementById("tab-short").innerHTML =
+        "<p>" + synthesizeNatal(chart) + "</p>" +
+        "<p class=\"small\">" + ZENIT_TEXTS.lifePath[chart.lifePath] + "</p>";
+
+      document.getElementById("tab-planets").innerHTML = chart.positions.map(function (p) {
+        const extra = planetLine(p);
+        const rx = p.retrograde ? '<span class="rx">Rx</span>' : "";
+        return '<div class="planet-row"><strong><a href="' + planetHref(p.key) + '">' + p.ru + "</a>" + rx +
+          " · " + p.sign.name + " " + formatDeg(p.sign.degree) +
+          "</strong><span class=\"meta\">" + (chart.unknownTime ? "знак" : p.house + " дом") + (extra ? " · " + extra : "") + "</span></div>";
+      }).join("");
+
+      const byHouse = {};
+      chart.positions.forEach(function (p) {
+        (byHouse[p.house] = byHouse[p.house] || []).push(p.ru);
+      });
+      let houses = "";
+      for (let i = 1; i <= 12; i++) {
+        const title = i === 7 ? '<a href="slovar/7-dom.html">' + houseLine(i) + "</a>" : houseLine(i);
+        houses += '<div class="planet-row"><strong>' + title + "</strong><span class=\"meta\">" +
+          (byHouse[i] ? byHouse[i].join(", ") : "пусто в целых знаках") + "</span></div>";
+      }
+      document.getElementById("tab-houses").innerHTML =
+        (chart.unknownTime ? "<p class=\"small\">Дома без точного времени — от знака Солнца, как грубая схема, не как ось рождения. <a href=\"slovar/doma.html\">Как устроены дома</a></p>" : "<p class=\"small\">Целые знаки: 1 дом — знак асцендента, дальше по кругу. <a href=\"slovar/doma.html\">Как устроены дома</a>. Плацидус подключим отдельно, если решим, что он нужен именно так.</p>") +
+        houses;
+
+      const aspectRows = chart.aspects.slice(0, 12).map(function (a) {
+        return '<div class="aspect-row">' + aspectLine(a) + "</div>";
+      }).join("") || "<p>Мажорных аспектов в выбранном орбисе почти нет — редкость, перепроверьте время.</p>";
+      document.getElementById("tab-aspects").innerHTML =
+        "<p class=\"small\"><a href=\"slovar/aspekty.html\">Что такое аспект</a></p>" + aspectRows;
+
+      const q = new URLSearchParams({ a_date: date, a_time: time, a_city: cityName });
+      document.getElementById("add-partner").href = "para.html?" + q.toString();
+      const reportQ = Zenit.natalQuery({ date: date, time: time, city: cityName });
+      document.getElementById("full-report").href = "otchet.html?" + reportQ;
+
+      const charts = Zenit.loadCharts ? Zenit.loadCharts() : [];
+      const existing = charts.filter(function (c) {
+        return c.date === date && (c.time || "") === (time || "") && c.city === cityName;
+      })[0];
+      if (existing) document.getElementById("chart-name").value = existing.name;
+      else if (saved && saved.name) document.getElementById("chart-name").value = saved.name;
+
+      document.getElementById("save-box").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const row = Zenit.upsertChart({
+          name: document.getElementById("chart-name").value,
+          date: date,
+          time: time,
+          city: cityName
+        });
+        const hint = document.getElementById("save-hint");
+        hint.textContent = "Сохранено как «" + row.name + "». Список — в сохранённых картах.";
+        hint.className = "ok-note";
+      });
+
+      document.querySelectorAll(".tabs button").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.remove("on"); });
+          document.querySelectorAll(".panel").forEach(function (p) { p.classList.remove("on"); });
+          btn.classList.add("on");
+          document.getElementById("tab-" + btn.dataset.tab).classList.add("on");
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

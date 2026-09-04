@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Заявка тарологу — Узнай себя</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23f4efe6' stroke='%236e3b32'/><circle cx='32' cy='32' r='6' fill='%231c1916'/></svg>" />
+  <style>html,body{background:#110f0d;color:#fbf6ee}</style>
+  <link rel="stylesheet" href="css/site.css?v=8" />
+</head>
+<body>
+  <header class="topbar sans">
+    <a class="logo" href="index.html">Зенит</a>
+    <nav class="top-nav">
+      <a href="natal.html">Карта</a>
+      <a href="para.html">Пара</a>
+      <a href="den.html">Таро</a>
+    </nav>
+  </header>
+
+  <main class="wrap sky">
+    <p class="kicker">Живой расклад</p>
+    <h1>Оставить заявку тарологу</h1>
+    <p class="lead">Карта дня на сайте остаётся. Сюда — если нужен человек: уточнит вопрос, вытянет карты, ответит.</p>
+
+    <div class="card reader">
+      <div class="avatar" aria-hidden="true"><img src="img/reader.jpg" alt="" width="56" height="56" /></div>
+      <div>
+        <strong>Полина</strong>
+        <p class="small" style="margin:4px 0 0">Читает заявки. Спокойно и по существу. <a href="tarolog.html">Кто читает и в каком формате</a></p>
+      </div>
+    </div>
+
+    <div class="notice" id="tg-setup" hidden></div>
+    <p class="ok-note" id="tg-ready" hidden>Telegram подключён: заявка уйдёт вам в чат с ботом.</p>
+
+    <form class="form sans" id="req-form">
+      <label for="r-name">Имя</label>
+      <input id="r-name" name="name" type="text" required autocomplete="name" />
+      <label for="r-contact">Telegram или телефон</label>
+      <input id="r-contact" name="contact" type="text" required placeholder="@username или +7…" />
+      <label for="r-q">Вопрос или тема</label>
+      <textarea id="r-q" name="question" required placeholder="Что сейчас важно решить? Чем конкретнее, тем полезнее расклад."></textarea>
+      <label for="r-fmt">Формат</label>
+      <select id="r-fmt" name="format">
+        <option>Текст в Telegram</option>
+        <option>Голосовые</option>
+        <option>Созвон</option>
+      </select>
+      <button class="btn" type="submit" id="req-submit">Отправить заявку</button>
+      <p class="hint">Это заявка, не оплата. Сначала договоримся о формате и сроке, потом — расклад. Ориентир сессии 1 500–4 000 ₽, не догма.</p>
+    </form>
+
+    <div class="card" id="req-ok" hidden>
+      <p class="ok-note" id="req-ok-note">Заявка ушла в Telegram.</p>
+      <p id="req-copy" class="small"></p>
+      <a class="btn" href="den.html">Вернуться к сегодня</a>
+    </div>
+  </main>
+
+  <footer class="site wrap">
+    <p>Не ставим диагноз, не обещаем возврат партнёра и не гадаем на здоровье. Если тема медицинская или юридическая — к профильному специалисту.</p>
+  </footer>
+  <nav class="bottom-nav">
+    <a href="index.html">Карта</a>
+    <a href="para.html">Пара</a>
+    <a href="den.html">День</a>
+    <a href="zayavka.html" aria-current="page">Заявка</a>
+  </nav>
+
+  <script src="js/site.js?v=4"></script>
+  <script>
+    const setup = document.getElementById("tg-setup");
+    const ready = document.getElementById("tg-ready");
+    const submitBtn = document.getElementById("req-submit");
+
+    function showSetup(html) {
+      setup.hidden = false;
+      ready.hidden = true;
+      setup.innerHTML = html;
+    }
+
+    fetch("/api/telegram-status")
+      .then(function (r) { return r.json(); })
+      .then(function (s) {
+        if (!s.configured) {
+          showSetup("Чтобы заявки приходили вам в Telegram, нужен бот. В Telegram откройте <strong>@BotFather</strong> → /newbot → скопируйте токен. Вставьте его в файл <code>telegram.json</code> в папке сайта (поле botToken). Затем напишите боту <strong>Start</strong> и обновите эту страницу.");
+          return;
+        }
+        if (!s.hasChat) {
+          const link = s.botUsername
+            ? '<a href="https://t.me/' + s.botUsername + '" target="_blank" rel="noopener">@' + s.botUsername + "</a>"
+            : "своему боту";
+          showSetup("Токен есть, но бот ещё не знает ваш чат. Откройте " + link + ", нажмите <strong>Start</strong> и обновите страницу.");
+          return;
+        }
+        setup.hidden = true;
+        ready.hidden = false;
+      })
+      .catch(function () {
+        showSetup("Сайт сейчас открыт без сервера заявок. Запустите <code>server.py</code> и откройте страницу через http://127.0.0.1:8765/ — иначе Telegram не примет заявку из файла.");
+      });
+
+    document.getElementById("req-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("r-name").value.trim(),
+        contact: document.getElementById("r-contact").value.trim(),
+        question: document.getElementById("r-q").value.trim(),
+        format: document.getElementById("r-fmt").value
+      };
+      try {
+        const all = JSON.parse(localStorage.getItem("zenit-requests") || "[]");
+        all.push(Object.assign({ at: new Date().toISOString() }, data));
+        localStorage.setItem("zenit-requests", JSON.stringify(all));
+      } catch (err) {}
+
+      const body =
+        "Заявка с Зенита\nИмя: " + data.name + "\nКонтакт: " + data.contact +
+        "\nФормат: " + data.format + "\n\n" + data.question;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Отправляем…";
+
+      fetch("/api/zayavka", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          document.getElementById("req-form").hidden = true;
+          document.getElementById("req-ok").hidden = false;
+          document.getElementById("req-copy").textContent = body;
+          const note = document.getElementById("req-ok-note");
+          if (res.ok && res.j.ok) {
+            note.textContent = "Заявка ушла в Telegram. Откройте чат с ботом — сообщение должно быть там.";
+            return;
+          }
+          if (res.j && res.j.error === "no_chat") {
+            note.textContent = "Бот ещё не видит ваш чат. Откройте бота, нажмите Start и отправьте заявку ещё раз.";
+            return;
+          }
+          if (res.j && res.j.error === "not_configured") {
+            note.textContent = "Токен бота ещё не вставлен в telegram.json. Заявка сохранена только на этом устройстве.";
+            return;
+          }
+          note.textContent = "В Telegram сейчас не ушло. Текст заявки ниже — можно скопировать. Проверьте, что запущен server.py и боту нажали Start.";
+        })
+        .catch(function () {
+          document.getElementById("req-form").hidden = true;
+          document.getElementById("req-ok").hidden = false;
+          document.getElementById("req-copy").textContent = body;
+          document.getElementById("req-ok-note").textContent = "Нет связи с сервером заявок. Откройте сайт через http://127.0.0.1:8765/ после запуска server.py.";
+        })
+        .finally(function () {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Отправить заявку";
+        });
+    });
+  </script>
+</body>
+</html>

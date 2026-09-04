@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Сегодня — Зенит</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23f4efe6' stroke='%236e3b32'/><circle cx='32' cy='32' r='6' fill='%231c1916'/></svg>" />
+  <style>html,body{background:#110f0d;color:#fbf6ee}</style>
+  <link rel="stylesheet" href="css/site.css?v=6" />
+</head>
+<body>
+  <header class="topbar sans">
+    <a class="logo" href="index.html">Зенит</a>
+    <nav class="top-nav">
+      <a href="natal.html">Карта</a>
+      <a href="para.html">Пара</a>
+      <a href="den.html" aria-current="page">Таро</a>
+    </nav>
+  </header>
+
+  <main class="wrap sky">
+    <p class="kicker">Повод вернуться</p>
+    <h1>Сегодня</h1>
+    <p class="lead">Если карта уже построена — один личный акцент. И одна карта таро на календарный день. Без трёх карт «на вопрос».</p>
+
+    <section id="transit-block" hidden>
+      <article class="card" id="transit-card">
+        <p class="kicker" id="transit-kicker">Транзит</p>
+        <h2 id="transit-title" style="margin-top:0"></h2>
+        <p id="transit-text"></p>
+        <p class="small" id="transit-meta"></p>
+      </article>
+    </section>
+
+    <section id="no-chart" class="card" hidden>
+      <h2 style="margin-top:0">Сначала своя карта</h2>
+      <p>Без натала «сегодня» — это только аркан ниже. Две минуты на дату, и появится личный акцент.</p>
+      <a class="btn" href="index.html">Построить карту</a>
+    </section>
+
+    <h2>Карта дня</h2>
+    <article class="card card-day" id="day-card">
+      <div class="card-face">
+        <div class="num" id="card-num"></div>
+        <h2 id="card-name"></h2>
+        <div class="rev" id="card-pos"></div>
+      </div>
+      <p id="card-text"></p>
+      <p class="small" id="card-date"></p>
+    </article>
+
+    <p>Самостоятельных раскладов на сайте нет: если нужен человек на живой вопрос — <a href="zayavka.html">оставьте заявку тарологу</a>.</p>
+  </main>
+
+  <footer class="site wrap">
+    <p>Карта дня бесплатная и одна на календарный день. Транзит — узкий орбис к вашей карте, не гороскоп «всем Девам».</p>
+  </footer>
+  <nav class="bottom-nav">
+    <a href="index.html">Карта</a>
+    <a href="para.html">Пара</a>
+    <a href="den.html" aria-current="page">День</a>
+    <a href="zayavka.html">Заявка</a>
+  </nav>
+
+  <script src="js/vendor/astronomy.browser.min.js"></script>
+  <script src="js/cities.js?v=2"></script>
+  <script src="js/natal.js?v=7"></script>
+  <script src="js/texts.js"></script>
+  <script src="js/tarot.js"></script>
+  <script src="js/site.js?v=4"></script>
+  <script>
+    (function () {
+      const draw = cardOfDay(Zenit.todayISO());
+      const roman = ["0","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI"];
+      document.getElementById("card-num").textContent = roman[draw.card.n] || String(draw.card.n);
+      document.getElementById("card-name").textContent = draw.card.name;
+      document.getElementById("card-pos").textContent = draw.reversed ? "Перевёрнутая" : "Прямая";
+      document.querySelector(".card-face").classList.toggle("is-reversed", draw.reversed);
+      document.getElementById("card-text").textContent = draw.text;
+      document.getElementById("card-date").textContent = "Сегодня, " + Zenit.formatRuDate(draw.day);
+
+      const saved = Zenit.loadNatal();
+      if (!saved || !saved.date) {
+        document.getElementById("no-chart").hidden = false;
+        return;
+      }
+      const cityObj = findCity(saved.city || "Москва");
+      if (!cityObj) {
+        document.getElementById("no-chart").hidden = false;
+        return;
+      }
+      const chart = computeChart({ date: saved.date, time: saved.time || "", city: cityObj.name, cityObj: cityObj });
+      const pack = natalTransits(chart, new Date());
+      const accent = todayAccent(chart, pack);
+      document.getElementById("transit-block").hidden = false;
+      document.getElementById("transit-kicker").textContent = "К карте · " + Zenit.formatRuDate(saved.date) + ", " + cityObj.name;
+      document.getElementById("transit-title").textContent = accent.title;
+      document.getElementById("transit-text").textContent = accent.text;
+      document.getElementById("transit-meta").innerHTML = '<a href="natal.html">Открыть натал</a> · <a href="slovar/tranzit.html">Что такое транзит</a>';
+    })();
+  </script>
+</body>
+</html>

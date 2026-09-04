@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Совместимость — Зенит</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23f4efe6' stroke='%236e3b32'/><circle cx='32' cy='32' r='6' fill='%231c1916'/></svg>" />
+  <style>html,body{background:#110f0d;color:#fbf6ee}</style>
+  <link rel="stylesheet" href="css/site.css?v=6" />
+</head>
+<body>
+  <header class="topbar sans">
+    <a class="logo" href="index.html">Зенит</a>
+    <nav class="top-nav">
+      <a href="natal.html">Карта</a>
+      <a href="para.html" aria-current="page">Пара</a>
+      <a href="den.html">Таро</a>
+    </nav>
+  </header>
+
+  <main class="wrap sky">
+    <p class="kicker">Синастрия</p>
+    <h1>Две карты рядом</h1>
+    <p class="lead">Не процент любви. Темы: где легко, где трёт, как разговаривать.</p>
+
+    <form class="form sans" id="pair-form">
+      <h3 style="margin-top:0">Вы</h3>
+      <div class="birth-fields" data-birth id="birth-a" data-date-name="a_date" data-time-name="a_time"></div>
+      <label for="a_city">Город</label>
+      <input id="a_city" name="a_city" type="text" list="cities" value="Москва" required />
+      <h3>Второй человек</h3>
+      <div class="birth-fields" data-birth id="birth-b" data-date-name="b_date" data-time-name="b_time"></div>
+      <label for="b_city">Город</label>
+      <input id="b_city" name="b_city" type="text" list="cities" value="Москва" required />
+      <datalist id="cities" data-cities></datalist>
+      <p id="city-notice" class="notice" hidden></p>
+      <button class="btn" type="submit">Сравнить карты</button>
+      <p class="hint">Без времени сравниваем Солнце и Луну. Этого уже достаточно, чтобы не скатываться в «70%». <a href="slovar/sinastriya.html">Что такое синастрия</a></p>
+      <p class="hint">Города — крупные центры. Своего нет — ближайший. <a href="metod.html#gorod">Почему не все</a></p>
+    </form>
+
+    <div id="pair-result" hidden>
+      <div class="big3" id="pair-big"></div>
+      <div id="themes"></div>
+      <p class="small">Это срез по светилам, не полная синастрия домов. <a href="slovar/sinastriya.html">Что такое синастрия</a> — без вердикта «созданы / нет».</p>
+    </div>
+  </main>
+
+  <footer class="site wrap">
+    <p><a href="zayavka.html">Нужен живой разбор пары</a> · <a href="etika.html">Этика</a></p>
+  </footer>
+  <nav class="bottom-nav">
+    <a href="index.html">Карта</a>
+    <a href="para.html" aria-current="page">Пара</a>
+    <a href="den.html">День</a>
+    <a href="zayavka.html">Заявка</a>
+  </nav>
+
+  <script src="js/vendor/astronomy.browser.min.js"></script>
+  <script src="js/cities.js?v=2"></script>
+  <script src="js/natal.js?v=7"></script>
+  <script src="js/texts.js"></script>
+  <script src="js/site.js?v=5"></script>
+  <script src="js/birth-fields.js"></script>
+  <script>
+    (function () {
+      const q = new URLSearchParams(location.search);
+      const saved = Zenit.loadNatal() || {};
+      BirthFields.fill(document.getElementById("birth-a"), q.get("a_date") || saved.date || "1994-08-25", q.get("a_time") || saved.time || "");
+      BirthFields.fill(document.getElementById("birth-b"), q.get("b_date") || "1991-03-12", q.get("b_time") || "");
+      document.getElementById("a_city").value = q.get("a_city") || saved.city || "Москва";
+      document.getElementById("b_city").value = q.get("b_city") || "Москва";
+
+      function run() {
+        const aCity = findCity(document.getElementById("a_city").value);
+        const bCity = findCity(document.getElementById("b_city").value);
+        const note = document.getElementById("city-notice");
+        if (!aCity || !bCity) {
+          note.hidden = false;
+          note.innerHTML = 'Города нет в списке. Возьмите ближайший крупный — полный справочник без истории пояса врал бы асценденту. <a href="metod.html#gorod">Почему так</a>';
+          return;
+        }
+        note.hidden = true;
+        const a = computeChart({
+          date: document.getElementById("a_date").value,
+          time: document.getElementById("a_time").value,
+          city: aCity.name,
+          cityObj: aCity
+        });
+        const b = computeChart({
+          date: document.getElementById("b_date").value,
+          time: document.getElementById("b_time").value,
+          city: bCity.name,
+          cityObj: bCity
+        });
+        document.getElementById("pair-result").hidden = false;
+        document.getElementById("pair-big").innerHTML =
+          "<div><small>Вы</small><b>" + a.sun.sign.name + "</b><span class=\"meta\">Луна " + a.moon.sign.name + "</span></div>" +
+          "<div><small>Пара</small><b>" + b.sun.sign.name + "</b><span class=\"meta\">Луна " + b.moon.sign.name + "</span></div>" +
+          "<div><small>Не вердикт</small><b>темы</b><span class=\"meta\">ниже</span></div>";
+        document.getElementById("themes").innerHTML = compatibilityThemes(a, b).map(function (t) {
+          return '<article class="card theme"><h3 style="margin-top:0">' + t.title + "</h3><p style=\"margin:0\">" + t.text + "</p></article>";
+        }).join("");
+        document.getElementById("pair-result").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      document.getElementById("pair-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const data = new URLSearchParams(new FormData(e.target));
+        history.replaceState(null, "", "para.html?" + data.toString());
+        run();
+      });
+
+      if (q.get("a_date") && q.get("b_date")) run();
+    })();
+  </script>
+</body>
+</html>

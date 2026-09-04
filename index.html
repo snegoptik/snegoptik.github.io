@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <meta name="description" content="Натальная карта по дате, времени и месту. Коротко, по-русски, без приговора." />
+  <title>Зенит — ваша натальная карта</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23f4efe6' stroke='%236e3b32'/><circle cx='32' cy='32' r='6' fill='%231c1916'/></svg>" />
+  <style>html,body{background:#110f0d;color:#fbf6ee}</style>
+  <link rel="stylesheet" href="css/site.css?v=6" />
+</head>
+<body>
+  <header class="topbar sans">
+    <a class="logo" href="index.html">Зенит</a>
+    <nav class="top-nav" aria-label="Разделы">
+      <a href="natal.html" aria-current="page">Карта</a>
+      <a href="para.html">Пара</a>
+      <a href="den.html">Таро</a>
+    </nav>
+  </header>
+
+  <main class="wrap hero">
+    <div class="hero-sky" aria-hidden="true"></div>
+    <p class="kicker">Натальная карта</p>
+    <h1>Не общее небо.<br />Ваша карта.</h1>
+    <p class="lead">Разбор по дате, времени и месту рождения. Коротко, по-русски, без приговора.</p>
+
+    <form class="form sans" action="natal.html" method="get">
+      <div class="birth-fields" data-birth id="birth-main" data-date-name="date" data-time-name="time" data-date="1994-08-25" data-time="14:20"></div>
+      <label for="city">Город</label>
+      <input id="city" name="city" type="text" list="cities" value="Москва" autocomplete="off" required enterkeyhint="done" />
+      <datalist id="cities" data-cities></datalist>
+      <button class="btn" type="submit">Построить карту</button>
+      <p class="hint">Не знаете час — поставьте галочку. Асцендент будет приблизительным, Солнце — точным.</p>
+      <p class="hint">Города — крупные центры, не каждый посёлок. Своего нет — ближайший: Солнце почти не сдвинется, асцендент может на градус. <a href="metod.html#gorod">Почему не все</a></p>
+    </form>
+
+    <div class="tools">
+      <a class="tool" href="para.html"><b>Совместимость</b>Две карты рядом, не «подходите / нет».</a>
+      <a class="tool" href="den.html"><b>Карта дня</b>Один аркан — на сегодня.</a>
+      <a class="tool" href="karty.html"><b>Сохранённые</b>Карты в этом браузере, без аккаунта.</a>
+      <a class="tool" href="den.html"><b>Сегодня</b>Личный акцент, если карта уже есть.</a>
+      <a class="tool wide" href="zayavka.html"><b>Расклад у таролога</b>Если нужен человек, а не алгоритм — оставьте заявку. Ответ в мессенджер, без витрины «40 гадалок».</a>
+    </div>
+
+    <p class="small">Считаем тропический зодиак, дома от знака асцендента. Подробнее — на странице <a href="metod.html">как мы считаем</a>.</p>
+  </main>
+
+  <footer class="site wrap">
+    <p>Это не медицина, не юридический совет и не гарантия дохода. Карта — язык характера, не приговор.<br />
+    <a href="metod.html">Метод</a> · <a href="etika.html">Этика</a> · <a href="slovar.html">Словарь</a><br />
+    Ищут: <a href="slovar/ascendent.html">асцендент</a> · <a href="slovar/sinastriya.html">синастрия</a> · <a href="slovar/karta-dnya-taro.html">карта дня</a></p>
+  </footer>
+
+  <nav class="bottom-nav" aria-label="Главное">
+    <a href="index.html" aria-current="page">Карта</a>
+    <a href="para.html">Пара</a>
+    <a href="den.html">День</a>
+    <a href="zayavka.html">Заявка</a>
+  </nav>
+
+  <script src="js/cities.js?v=2"></script>
+  <script src="js/site.js?v=5"></script>
+  <script src="js/birth-fields.js"></script>
+  <script>
+    (function () {
+      const saved = Zenit.loadNatal();
+      if (!saved) return;
+      BirthFields.fill(document.getElementById("birth-main"), saved.date || "", saved.time || "");
+      if (saved.city) document.getElementById("city").value = saved.city;
+    })();
+  </script>
+</body>
+</html>

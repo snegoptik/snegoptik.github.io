@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Полный разбор — Зенит</title>
+  <style>html,body{background:#110f0d;color:#fbf6ee}</style>
+  <link rel="stylesheet" href="css/site.css?v=6" />
+</head>
+<body>
+  <header class="topbar sans">
+    <a class="logo" href="index.html">Зенит</a>
+    <nav class="top-nav">
+      <a href="natal.html">Карта</a>
+      <a href="otchet.html" aria-current="page">Разбор</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <p class="kicker" id="kicker">Полный разбор</p>
+    <h1>Черновик глубины</h1>
+    <p class="lead">Дома, планеты и аспекты одним текстом. Это не PDF и не подписка — первый слой этапа C, без замка на расчёт.</p>
+    <div id="missing" class="card" hidden>
+      <p>Сначала нужна карта. Введите дату на главной — разбор соберётся из тех же положений, не из воздуха.</p>
+      <a class="btn" href="index.html">Построить карту</a>
+    </div>
+    <div id="report"></div>
+  </main>
+  <footer class="site wrap">
+    <p>Это не медицина, не юридический совет и не гарантия дохода. <a href="natal.html">К колесу</a> · <a href="zayavka.html">Живой расклад</a></p>
+  </footer>
+  <nav class="bottom-nav">
+    <a href="index.html">Карта</a>
+    <a href="para.html">Пара</a>
+    <a href="den.html">День</a>
+    <a href="zayavka.html">Заявка</a>
+  </nav>
+  <script src="js/vendor/astronomy.browser.min.js"></script>
+  <script src="js/cities.js?v=2"></script>
+  <script src="js/natal.js?v=7"></script>
+  <script src="js/texts.js"></script>
+  <script src="js/site.js?v=4"></script>
+  <script>
+    (function () {
+      const q = new URLSearchParams(location.search);
+      let date = q.get("date");
+      let time = q.get("time") || "";
+      let cityName = q.get("city") || "";
+      const saved = Zenit.loadNatal();
+      if (!date && saved) {
+        date = saved.date;
+        time = saved.time || "";
+        cityName = saved.city || cityName;
+      }
+      if (!date) {
+        document.getElementById("missing").hidden = false;
+        return;
+      }
+      const cityObj = findCity(cityName || "Москва");
+      if (!cityObj) {
+        document.getElementById("missing").hidden = false;
+        return;
+      }
+      const chart = computeChart({ date: date, time: time, city: cityObj.name, cityObj: cityObj });
+      document.getElementById("kicker").textContent =
+        "Разбор · " + Zenit.formatRuDate(date) + (time ? ", " + time : "") + ", " + cityObj.name;
+      document.getElementById("report").innerHTML = renderFullReport(chart);
+    })();
+  </script>
+</body>
+</html>
