@@ -95,14 +95,6 @@
     }
   };
 
-  function applySky(name) {
-    const sky = name === "paper" ? "paper" : "dusk";
-    document.documentElement.setAttribute("data-sky", sky);
-    const theme = document.querySelector('meta[name="theme-color"]');
-    if (theme) theme.setAttribute("content", sky === "paper" ? "#f3eee4" : "#110f0d");
-    try { localStorage.setItem("zenit-sky", sky); } catch (e) {}
-  }
-
   function mountSkyToggle() {
     const bar = document.querySelector(".topbar");
     if (!bar || document.getElementById("sky-toggle")) return;
@@ -116,19 +108,15 @@
       btn.setAttribute("aria-label", paper ? "Включить ночное небо" : "Включить светлую бумагу");
     }
     btn.addEventListener("click", function () {
-      applySky(document.documentElement.getAttribute("data-sky") === "paper" ? "dusk" : "paper");
+      if (window.ZenitSky) ZenitSky.toggle();
       sync();
     });
+    document.documentElement.addEventListener("zenit-sky", sync);
     const nav = bar.querySelector(".top-nav");
     bar.insertBefore(btn, nav || bar.lastChild);
     sync();
   }
 
-  try {
-    applySky(localStorage.getItem("zenit-sky") || "dusk");
-  } catch (e) {
-    applySky("dusk");
-  }
   mountSkyToggle();
   fillCityLists();
 })();
