@@ -674,6 +674,11 @@ footer.site a { color: #9a8e84; }
   to { opacity: 1; transform: none; }
 }
 
+@media (max-width: 719px) {
+  .top-nav { display: none; }
+  .sky-toggle { margin-left: auto; }
+}
+
 @media (min-width: 720px) {
   body { padding-bottom: 48px; }
   .bottom-nav { display: none; }
