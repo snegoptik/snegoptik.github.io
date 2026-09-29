@@ -134,6 +134,157 @@
     return ((planetIndex - ascIndex + 12) % 12) + 1;
   }
 
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function minutesLabel(mins) {
+    if (mins >= 24 * 60) return "24:00";
+    return pad2(Math.floor(mins / 60)) + ":" + pad2(mins % 60);
+  }
+
+  const TIME_PERIODS = {};
+  for (let hour = 0; hour < 24; hour++) {
+    const id = pad2(hour);
+    const next = hour === 23 ? "24:00" : pad2(hour + 1) + ":00";
+    TIME_PERIODS[id] = {
+      id: id,
+      from: hour * 60,
+      to: (hour + 1) * 60,
+      mid: id + ":30",
+      label: id + ":00–" + next
+    };
+  }
+
+  function ascendantWindows(dateStr, city, periodId) {
+    const tzHours = typeof tzAt === "function" ? tzAt(city, dateStr) : city.tz;
+    const step = 10;
+    const points = [];
+    for (let mins = 0; mins <= 24 * 60; mins += step) {
+      let when;
+      if (mins >= 24 * 60) {
+        const start = civilToUtc(dateStr, "00:00", tzHours, false);
+        when = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+      } else {
+        when = civilToUtc(dateStr, minutesLabel(mins), tzHours, false);
+      }
+      points.push({ mins: mins, sign: lonToSign(ascendant(when, city.lat, city.lon)).index });
+    }
+    let ranges = [];
+    let start = 0;
+    let sign = points[0].sign;
+    for (let i = 1; i < points.length; i++) {
+      if (points[i].sign !== sign) {
+        ranges.push({ from: start, to: points[i].mins, sign: sign });
+        start = points[i].mins;
+        sign = points[i].sign;
+      }
+    }
+    ranges.push({ from: start, to: 24 * 60, sign: sign });
+    const period = TIME_PERIODS[periodId];
+    if (period) {
+      ranges = ranges.map(function (r) {
+        return { from: Math.max(r.from, period.from), to: Math.min(r.to, period.to), sign: r.sign };
+      });
+    }
+    return ranges.filter(function (r) { return r.to > r.from; }).map(function (r) {
+      return {
+        from: minutesLabel(r.from),
+        to: minutesLabel(r.to),
+        sign: SIGNS[r.sign]
+      };
+    });
+  }
+
+  function chartSketch(chart) {
+    const planets = {};
+    chart.positions.forEach(function (p) { planets[p.key] = p.sign.key; });
+    return {
+      sun: chart.sun.sign.key,
+      moon: chart.moon.sign.key,
+      asc: chart.asc ? chart.asc.key : "",
+      planets: planets
+    };
+  }
+
+  function downloadShareCard(chart, when) {
+    const canvas = document.createElement("canvas");
+    const w = 900;
+    const h = 1200;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#f4efe6";
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#6e3b32";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(40, 40, w - 80, h - 80);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#6e3b32";
+    ctx.font = "600 20px Segoe UI, sans-serif";
+    ctx.fillText("ЗЕНИТ", w / 2, 120);
+    ctx.fillStyle = "#1c1916";
+    ctx.font = "600 52px Georgia, Times New Roman, serif";
+    ctx.fillText("Не общее небо.", w / 2, 200);
+
+    const cx = w / 2;
+    const cy = 520;
+    const r = 200;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = "#c4b6a4";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "#1c1916";
+    ctx.fill();
+
+    function dot(index, color) {
+      const ang = ((index * 30) - 90) * Math.PI / 180;
+      const x = cx + Math.cos(ang) * (r - 28);
+      const y = cy + Math.sin(ang) * (r - 28);
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+    dot(chart.sun.sign.index, "#c4a15a");
+    dot(chart.moon.sign.index, "#7f93a3");
+    if (chart.asc) dot(chart.asc.index, "#6e3b32");
+
+    const rows = [
+      ["Солнце", chart.sun.sign.name],
+      ["Луна", chart.moon.sign.name],
+      ["Асцендент", chart.asc ? chart.asc.name : "час не указан"]
+    ];
+    rows.forEach(function (row, i) {
+      const x = 180 + i * 270;
+      ctx.fillStyle = "#6b625b";
+      ctx.font = "600 16px Segoe UI, sans-serif";
+      ctx.fillText(row[0].toUpperCase(), x, 820);
+      ctx.fillStyle = "#1c1916";
+      ctx.font = "600 32px Georgia, Times New Roman, serif";
+      ctx.fillText(row[1], x, 868);
+    });
+
+    ctx.fillStyle = "#6b625b";
+    ctx.font = "22px Segoe UI, sans-serif";
+    ctx.fillText(when || "", w / 2, 980);
+    ctx.font = "18px Segoe UI, sans-serif";
+    ctx.fillText("Натальная карта", w / 2, 1040);
+
+    canvas.toBlob(function (blob) {
+      if (!blob) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "zenit-karta.png";
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+    }, "image/png");
+  }
+
   function lifePath(dateStr) {
     const digits = dateStr.replace(/\D/g, "").split("").map(Number);
     let n = digits.reduce(function (s, x) { return s + x; }, 0);
@@ -145,9 +296,10 @@
 
   function computeChart(input) {
     const city = input.cityObj;
+    const period = !input.time && TIME_PERIODS[input.period] ? TIME_PERIODS[input.period] : null;
     const unknownTime = !input.time;
     const tzHours = typeof tzAt === "function" ? tzAt(city, input.date) : city.tz;
-    const date = civilToUtc(input.date, input.time, tzHours, unknownTime);
+    const date = civilToUtc(input.date, period ? period.mid : input.time, tzHours, unknownTime && !period);
     const positions = PLANETS.map(function (p) {
       const lon = geoLon(p.body, date);
       const sign = lonToSign(lon);
@@ -200,11 +352,12 @@
       date: date,
       tzHours: tzHours,
       tzNote: city.zone === "msk" && input.date < "2014-10-26"
-        ? "Для московского пояса взят час на дату рождения, не «как сейчас»."
+        ? "Для московского пояса взят час на дату рождения, а не «как сейчас»."
         : (input.date < "2014-10-26"
-          ? "Для этого города пока текущий пояс. Асцендент на старых датах может сдвинуться примерно на час."
+          ? "Для этого города учтён текущий часовой пояс. На датах до 2014 года асцендент может отличаться примерно на час."
           : null),
       unknownTime: unknownTime,
+      period: period,
       positions: positions,
       sun: sun,
       moon: moon,
@@ -504,4 +657,8 @@
   global.formatDeg = formatDeg;
   global.lifePathNumber = lifePath;
   global.natalTransits = natalTransits;
+  global.TIME_PERIODS = TIME_PERIODS;
+  global.ascendantWindows = ascendantWindows;
+  global.chartSketch = chartSketch;
+  global.downloadShareCard = downloadShareCard;
 })(window);

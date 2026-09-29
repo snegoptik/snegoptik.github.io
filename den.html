@@ -7,13 +7,13 @@
   <title>Сегодня — Зенит</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23f4efe6' stroke='%236e3b32'/><circle cx='32' cy='32' r='6' fill='%231c1916'/></svg>" />
   <style>html,body{background:#110f0d;color:#fbf6ee}</style>
-  <link rel="stylesheet" href="css/site.css?v=6" />
+  <link rel="stylesheet" href="css/site.css?v=19" />
 </head>
 <body>
   <header class="topbar sans">
     <a class="logo" href="index.html">Зенит</a>
     <nav class="top-nav">
-      <a href="natal.html">Карта</a>
+      <a href="index.html">Карта</a>
       <a href="para.html">Пара</a>
       <a href="den.html" aria-current="page">Таро</a>
     </nav>
@@ -22,7 +22,7 @@
   <main class="wrap sky">
     <p class="kicker">Повод вернуться</p>
     <h1>Сегодня</h1>
-    <p class="lead">Если карта уже построена — один личный акцент. И одна карта таро на календарный день. Без трёх карт «на вопрос».</p>
+    <p class="lead">Если карта уже есть — один личный акцент. И одна карта таро на сегодня.</p>
 
     <section id="transit-block" hidden>
       <article class="card" id="transit-card">
@@ -35,26 +35,27 @@
 
     <section id="no-chart" class="card" hidden>
       <h2 style="margin-top:0">Сначала своя карта</h2>
-      <p>Без натала «сегодня» — это только аркан ниже. Две минуты на дату, и появится личный акцент.</p>
+      <p>Без своей карты «сегодня» — это только аркан ниже. Дата занимает пару минут, и появится личный акцент.</p>
       <a class="btn" href="index.html">Построить карту</a>
     </section>
 
     <h2>Карта дня</h2>
     <article class="card card-day" id="day-card">
       <div class="card-face">
-        <div class="num" id="card-num"></div>
-        <h2 id="card-name"></h2>
-        <div class="rev" id="card-pos"></div>
+        <img id="card-art" alt="" width="480" height="827" />
       </div>
+      <p class="kicker" id="card-num"></p>
+      <h2 id="card-name"></h2>
+      <p class="rev" id="card-pos"></p>
       <p id="card-text"></p>
       <p class="small" id="card-date"></p>
     </article>
 
-    <p>Самостоятельных раскладов «на вопрос» на сайте нет. Живой расклад у таролога — <a href="zayavka.html">пока в разработке</a>.</p>
+    <p>Расклад на свой вопрос здесь не делается. Живой вопрос — <a href="zayavka.html">заявка тарологу</a>: её видят оба, берёт один.</p>
   </main>
 
   <footer class="site wrap">
-    <p>Карта дня бесплатная и одна на календарный день. Транзит — узкий орбис к вашей карте, не гороскоп «всем Девам».</p>
+    <p>Карта дня бесплатная и одна на календарный день. Транзит — короткое совпадение с вашей картой, а не общий гороскоп знака.</p>
   </footer>
   <nav class="bottom-nav">
     <a href="index.html">Карта</a>
@@ -65,10 +66,10 @@
 
   <script src="js/vendor/astronomy.browser.min.js"></script>
   <script src="js/cities.js?v=2"></script>
-  <script src="js/natal.js?v=7"></script>
-  <script src="js/texts.js"></script>
-  <script src="js/tarot.js"></script>
-  <script src="js/site.js?v=4"></script>
+  <script src="js/natal.js?v=11"></script>
+  <script src="js/texts.js?v=11"></script>
+  <script src="js/tarot.js?v=3"></script>
+  <script src="js/site.js?v=9"></script>
   <script>
     (function () {
       const draw = cardOfDay(Zenit.todayISO());
@@ -76,6 +77,9 @@
       document.getElementById("card-num").textContent = roman[draw.card.n] || String(draw.card.n);
       document.getElementById("card-name").textContent = draw.card.name;
       document.getElementById("card-pos").textContent = draw.reversed ? "Перевёрнутая" : "Прямая";
+      const art = document.getElementById("card-art");
+      art.src = "img/tarot/" + String(draw.card.n).padStart(2, "0") + ".jpg";
+      art.alt = draw.card.name;
       document.querySelector(".card-face").classList.toggle("is-reversed", draw.reversed);
       document.getElementById("card-text").textContent = draw.text;
       document.getElementById("card-date").textContent = "Сегодня, " + Zenit.formatRuDate(draw.day);
@@ -90,7 +94,7 @@
         document.getElementById("no-chart").hidden = false;
         return;
       }
-      const chart = computeChart({ date: saved.date, time: saved.time || "", city: cityObj.name, cityObj: cityObj });
+      const chart = computeChart({ date: saved.date, time: saved.time || "", period: saved.time ? "" : (saved.period || ""), city: cityObj.name, cityObj: cityObj });
       const pack = natalTransits(chart, new Date());
       const accent = todayAccent(chart, pack);
       document.getElementById("transit-block").hidden = false;

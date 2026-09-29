@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f4efe6" />
-  <meta name="description" content="Натальная карта по дате, времени и месту. Коротко, по-русски, без приговора." />
+  <meta name="description" content="Натальная карта по дате, времени и месту. Коротко и по-русски." />
   <title>Зенит — ваша натальная карта</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23f4efe6' stroke='%236e3b32'/><circle cx='32' cy='32' r='6' fill='%231c1916'/></svg>" />
   <style>html,body{background:#110f0d;color:#fbf6ee}</style>
-  <link rel="stylesheet" href="css/site.css?v=6" />
+  <link rel="stylesheet" href="css/site.css?v=26" />
 </head>
 <body>
   <header class="topbar sans">
     <a class="logo" href="index.html">Зенит</a>
     <nav class="top-nav" aria-label="Разделы">
-      <a href="natal.html" aria-current="page">Карта</a>
+      <a href="index.html" aria-current="page">Карта</a>
       <a href="para.html">Пара</a>
       <a href="den.html">Таро</a>
     </nav>
@@ -22,33 +22,43 @@
 
   <main class="wrap hero">
     <div class="hero-sky" aria-hidden="true"></div>
-    <p class="kicker">Натальная карта</p>
-    <h1>Не общее небо.<br />Ваша карта.</h1>
-    <p class="lead">Разбор по дате, времени и месту рождения. Коротко, по-русски, без приговора.</p>
+    <section id="morning" class="card morning" hidden>
+      <p class="kicker" id="morning-kicker">Ваша карта</p>
+      <h2 id="morning-name">Ваша карта</h2>
+      <div class="big3" id="morning-big3"></div>
+      <p class="today-line" id="morning-today"></p>
+      <div class="actions">
+        <a class="btn" href="den.html">Сегодня целиком</a>
+        <a class="btn btn-ghost" id="morning-open" href="natal.html">Открыть карту</a>
+      </div>
+    </section>
+    <p class="kicker" id="fresh-kicker">Натальная карта</p>
+    <h1 id="fresh-title">Не общее небо.<br />Ваша карта.</h1>
+    <p class="lead" id="fresh-lead">Разбор по дате, времени и месту рождения. Коротко и по-русски.</p>
 
     <form class="form sans" action="natal.html" method="get">
-      <div class="birth-fields" data-birth id="birth-main" data-date-name="date" data-time-name="time" data-date="1994-08-25" data-time="14:20"></div>
+      <div class="birth-fields" data-birth id="birth-main" data-date-name="date" data-time-name="time" data-city-input="city" data-date="1994-08-25" data-time="14:20"></div>
       <label for="city">Город</label>
       <input id="city" name="city" type="text" list="cities" value="Москва" autocomplete="off" required enterkeyhint="done" />
       <datalist id="cities" data-cities></datalist>
       <button class="btn" type="submit">Построить карту</button>
-      <p class="hint">Не знаете час — поставьте галочку. Асцендент будет приблизительным, Солнце — точным.</p>
-      <p class="hint">Города — крупные центры, не каждый посёлок. Своего нет — ближайший: Солнце почти не сдвинется, асцендент может на градус. <a href="metod.html#gorod">Почему не все</a></p>
+      <p class="hint">Не знаете час — поставьте галочку и выберите час из списка. Справа будет знак, который восходил. Луна без часа — на полдень, с часом — на его середину.</p>
+      <p class="hint">Города — крупные центры, а не каждый посёлок. Своего нет — берите ближайший: Солнце почти не сдвинется, асцендент может сдвинуться на градус. <a href="metod.html#gorod">Почему не все</a></p>
     </form>
 
     <div class="tools">
-      <a class="tool" href="para.html"><b>Совместимость</b>Две карты рядом, не «подходите / нет».</a>
+      <a class="tool" href="para.html"><b>Совместимость</b>Две карты рядом. Процент «подходите или нет» не считаем.</a>
       <a class="tool" href="den.html"><b>Карта дня</b>Один аркан — на сегодня.</a>
-      <a class="tool" href="karty.html"><b>Сохранённые</b>Карты в этом браузере, без аккаунта.</a>
+      <a class="tool" href="karty.html"><b>Сохранённые</b>Карты остаются в этом браузере.</a>
       <a class="tool" href="den.html"><b>Сегодня</b>Личный акцент, если карта уже есть.</a>
-      <a class="tool wide" href="zayavka.html"><b>Расклад у таролога</b>Пока в разработке. Сейчас — карта дня, один аркан на сегодня.</a>
+      <a class="tool wide" href="zayavka.html"><b>Расклад у таролога</b>Два таролога, заявку берёт один. Карта дня — один аркан на сегодня.</a>
     </div>
 
-    <p class="small">Считаем тропический зодиак, дома от знака асцендента. Подробнее — на странице <a href="metod.html">как мы считаем</a>.</p>
+    <p class="small">Считаем тропический зодиак, дома от знака асцендента. Подробнее — <a href="metod.html">как мы считаем</a>.</p>
   </main>
 
   <footer class="site wrap">
-    <p>Это не медицина, не юридический совет и не гарантия дохода. Карта — язык характера, не приговор.<br />
+    <p>Это не медицина, не юридический совет и не обещание дохода. Карта говорит о характере.<br />
     <a href="metod.html">Метод</a> · <a href="etika.html">Этика</a> · <a href="slovar.html">Словарь</a><br />
     Ищут: <a href="slovar/ascendent.html">асцендент</a> · <a href="slovar/sinastriya.html">синастрия</a> · <a href="slovar/karta-dnya-taro.html">карта дня</a></p>
   </footer>
@@ -60,15 +70,46 @@
     <a href="zayavka.html">Заявка</a>
   </nav>
 
+  <script src="js/vendor/astronomy.browser.min.js"></script>
   <script src="js/cities.js?v=2"></script>
-  <script src="js/site.js?v=5"></script>
-  <script src="js/birth-fields.js"></script>
+  <script src="js/natal.js?v=11"></script>
+  <script src="js/texts.js?v=11"></script>
+  <script src="js/site.js?v=9"></script>
+  <script src="js/birth-fields.js?v=4"></script>
   <script>
     (function () {
       const saved = Zenit.loadNatal();
-      if (!saved) return;
-      BirthFields.fill(document.getElementById("birth-main"), saved.date || "", saved.time || "");
+      if (!saved || !saved.date) return;
+      BirthFields.fill(document.getElementById("birth-main"), saved.date || "", saved.time || "", saved.period || "");
       if (saved.city) document.getElementById("city").value = saved.city;
+      const cityObj = findCity(saved.city || "");
+      if (!cityObj) return;
+      const chart = computeChart({ date: saved.date, time: saved.time || "", period: saved.time ? "" : (saved.period || ""), city: cityObj.name, cityObj: cityObj });
+      const prev = Zenit.loadNatal() || {};
+      const same = prev.date === saved.date && (prev.time || "") === (saved.time || "") && prev.city === cityObj.name;
+      Zenit.saveNatal({
+        date: saved.date,
+        time: saved.time || "",
+        period: saved.time ? "" : (saved.period || ""),
+        city: cityObj.name,
+        name: same ? prev.name : undefined,
+        id: same ? prev.id : undefined,
+        sketch: chartSketch(chart)
+      });
+      const pack = natalTransits(chart, new Date());
+      const accent = todayAccent(chart, pack);
+      document.getElementById("morning").hidden = false;
+      document.getElementById("morning-kicker").textContent = saved.name || "Ваша карта";
+      document.getElementById("morning-name").textContent = Zenit.formatRuDate(saved.date) + (saved.time ? ", " + saved.time : (chart.period ? ", " + chart.period.label : ", время не указано")) + ", " + cityObj.name;
+      document.getElementById("morning-big3").innerHTML =
+        "<div><small>Солнце</small><b>" + chart.sun.sign.name + "</b></div>" +
+        "<div><small>Луна</small><b>" + chart.moon.sign.name + "</b></div>" +
+        "<div><small>Асцендент</small><b>" + (chart.asc ? chart.asc.name : "нет часа") + "</b></div>";
+      document.getElementById("morning-today").textContent = accent.title + ". " + accent.text;
+      document.getElementById("morning-open").href = "natal.html?" + Zenit.natalQuery({ date: saved.date, time: saved.time || "", period: saved.period || "", city: cityObj.name });
+      document.getElementById("fresh-kicker").textContent = "Другая карта";
+      document.getElementById("fresh-title").textContent = "Построить ещё одну";
+      document.getElementById("fresh-lead").hidden = true;
     })();
   </script>
 </body>

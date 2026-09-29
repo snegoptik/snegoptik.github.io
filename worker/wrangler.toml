@@ -1,0 +1,14 @@
+name = "zenit-zayavka"
+main = "index.js"
+compatibility_date = "2026-09-29"
+
+[vars]
+ALLOW_ORIGIN = "https://snegoptik.github.io,http://127.0.0.1:8765,http://localhost:8765"
+
+[[durable_objects.bindings]]
+name = "QUEUE"
+class_name = "Queue"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Queue"]

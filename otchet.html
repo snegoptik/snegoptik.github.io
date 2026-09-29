@@ -6,28 +6,28 @@
   <meta name="theme-color" content="#f4efe6" />
   <title>Полный разбор — Зенит</title>
   <style>html,body{background:#110f0d;color:#fbf6ee}</style>
-  <link rel="stylesheet" href="css/site.css?v=6" />
+  <link rel="stylesheet" href="css/site.css?v=20" />
 </head>
 <body>
   <header class="topbar sans">
     <a class="logo" href="index.html">Зенит</a>
     <nav class="top-nav">
-      <a href="natal.html">Карта</a>
+      <a href="index.html">Карта</a>
       <a href="otchet.html" aria-current="page">Разбор</a>
     </nav>
   </header>
   <main class="wrap">
     <p class="kicker" id="kicker">Полный разбор</p>
-    <h1>Черновик глубины</h1>
-    <p class="lead">Дома, планеты и аспекты одним текстом. Это не PDF и не подписка — первый слой этапа C, без замка на расчёт.</p>
+    <h1>Подробный разбор</h1>
+    <p class="lead">Дома, планеты и аспекты одним текстом. Тот же расчёт, что на колесе.</p>
     <div id="missing" class="card" hidden>
-      <p>Сначала нужна карта. Введите дату на главной — разбор соберётся из тех же положений, не из воздуха.</p>
+      <p>Сначала нужна карта. Введите дату на главной. Разбор соберётся из тех же положений.</p>
       <a class="btn" href="index.html">Построить карту</a>
     </div>
     <div id="report"></div>
   </main>
   <footer class="site wrap">
-    <p>Это не медицина, не юридический совет и не гарантия дохода. <a href="natal.html">К колесу</a> · <a href="zayavka.html">Живой расклад — в разработке</a></p>
+    <p>Это не медицина, не юридический совет и не гарантия дохода. <a href="natal.html">К колесу</a> · <a href="zayavka.html">Заявка тарологу</a></p>
   </footer>
   <nav class="bottom-nav">
     <a href="index.html">Карта</a>
@@ -37,19 +37,21 @@
   </nav>
   <script src="js/vendor/astronomy.browser.min.js"></script>
   <script src="js/cities.js?v=2"></script>
-  <script src="js/natal.js?v=7"></script>
-  <script src="js/texts.js"></script>
-  <script src="js/site.js?v=4"></script>
+  <script src="js/natal.js?v=11"></script>
+  <script src="js/texts.js?v=11"></script>
+  <script src="js/site.js?v=9"></script>
   <script>
     (function () {
       const q = new URLSearchParams(location.search);
       let date = q.get("date");
       let time = q.get("time") || "";
+      let period = time ? "" : (q.get("period") || "");
       let cityName = q.get("city") || "";
       const saved = Zenit.loadNatal();
       if (!date && saved) {
         date = saved.date;
         time = saved.time || "";
+        period = time ? "" : (saved.period || "");
         cityName = saved.city || cityName;
       }
       if (!date) {
@@ -61,9 +63,9 @@
         document.getElementById("missing").hidden = false;
         return;
       }
-      const chart = computeChart({ date: date, time: time, city: cityObj.name, cityObj: cityObj });
+      const chart = computeChart({ date: date, time: time, period: period, city: cityObj.name, cityObj: cityObj });
       document.getElementById("kicker").textContent =
-        "Разбор · " + Zenit.formatRuDate(date) + (time ? ", " + time : "") + ", " + cityObj.name;
+        "Разбор · " + Zenit.formatRuDate(date) + (time ? ", " + time : (chart.period ? ", " + chart.period.label : "")) + ", " + cityObj.name;
       document.getElementById("report").innerHTML = renderFullReport(chart);
     })();
   </script>

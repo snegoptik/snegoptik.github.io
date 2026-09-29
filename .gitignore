@@ -1,1 +1,4 @@
 telegram.json
+worker/.dev.vars
+worker/.wrangler
+

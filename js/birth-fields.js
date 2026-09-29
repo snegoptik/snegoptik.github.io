@@ -64,15 +64,17 @@
     qs(root, "date").value = y && m && d ? y + "-" + pad(m) + "-" + pad(d) : "";
     if (unknown) {
       qs(root, "time").value = "";
+      qs(root, "period").value = qs(root, "span").value || "";
     } else {
       qs(root, "time").value = qs(root, "hour").value + ":" + qs(root, "minute").value;
+      qs(root, "period").value = "";
     }
     root.classList.toggle("is-notime", unknown);
     qs(root, "hour").disabled = unknown;
     qs(root, "minute").disabled = unknown;
   }
 
-  function fill(root, dateIso, timeHm) {
+  function fill(root, dateIso, timeHm, periodId) {
     if (!root) return;
     const parsed = parseDate(dateIso);
     if (parsed) {
@@ -87,13 +89,71 @@
       qs(root, "hour").value = tm.h;
       qs(root, "minute").value = tm.min;
     }
+    const span = qs(root, "span");
+    if (!unknown) span.value = "";
+    else if (isHourId(periodId)) span.value = periodId;
+    else if (periodId === "") span.value = "";
     syncHidden(root);
+    markHour(root);
+    paintHours(root);
+  }
+
+  function isHourId(id) {
+    return /^([01]\d|2[0-3])$/.test(id || "");
+  }
+
+  function markHour(root) {
+    const cur = (qs(root, "span") && qs(root, "span").value) || "";
+    const list = qs(root, "hours");
+    root.querySelectorAll(".hour-row").forEach(function (btn) {
+      btn.classList.toggle("is-on", btn.getAttribute("data-hour") === cur);
+    });
+    const on = list && list.querySelector(".hour-row.is-on");
+    if (!on || !list || !cur) return;
+    const top = on.offsetTop;
+    const bottom = top + on.offsetHeight;
+    if (top < list.scrollTop) list.scrollTop = top;
+    else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+  }
+
+  function minutesOf(label) {
+    if (label === "24:00") return 24 * 60;
+    const p = String(label || "").split(":");
+    return Number(p[0]) * 60 + Number(p[1] || 0);
+  }
+
+  function paintHours(root) {
+    if (!root || !qs(root, "date")) return;
+    const signs = {};
+    const cityId = root.getAttribute("data-city-input");
+    const cityInput = cityId ? document.getElementById(cityId) : null;
+    const city = cityInput && typeof findCity === "function" ? findCity(cityInput.value) : null;
+    const date = qs(root, "date").value;
+    if (city && date && typeof ascendantWindows === "function") {
+      const windows = ascendantWindows(date, city);
+      for (let h = 0; h < 24; h++) {
+        const from = h * 60;
+        const to = from + 60;
+        const names = [];
+        windows.forEach(function (w) {
+          const a = minutesOf(w.from);
+          const b = minutesOf(w.to);
+          if (b > from && a < to && names.indexOf(w.sign.name) === -1) names.push(w.sign.name);
+        });
+        signs[pad(h)] = names.join(", ");
+      }
+    }
+    root.querySelectorAll("[data-sign]").forEach(function (el) {
+      el.textContent = signs[el.getAttribute("data-sign")] || "";
+    });
+    markHour(root);
   }
 
   function mount(root) {
     if (!root || root.dataset.ready) return;
     const dateName = root.getAttribute("data-date-name") || "date";
     const timeName = root.getAttribute("data-time-name") || "time";
+    const periodName = timeName === "time" ? "period" : timeName.replace(/_time$/, "_period");
     const uid = root.id || dateName;
     const initialDate = parseDate(root.getAttribute("data-date") || "");
     const initialTime = parseTime(root.getAttribute("data-time") || "");
@@ -130,17 +190,49 @@
         '<input id="' + uid + '-notime" data-part="notime" type="checkbox"' + (initialTime ? "" : " checked") + " />" +
         "<span>Не знаю точное время</span>" +
       "</label>" +
+      '<div class="birth-period">' +
+        '<p class="birth-label" id="' + uid + '-span-label">Примерный час</p>' +
+        '<div class="hour-list" data-part="hours" role="listbox" aria-labelledby="' + uid + '-span-label">' + hourRows() + "</div>" +
+        '<p class="hint">Это не точная минута. Строка справа — какой знак восходил в этот час. Луну посчитаем на середину часа.</p>' +
+      "</div>" +
+      '<input type="hidden" data-part="span" />' +
       '<input type="hidden" data-part="date" id="' + dateName + '" name="' + dateName + '" required />' +
-      '<input type="hidden" data-part="time" id="' + timeName + '" name="' + timeName + '" />';
+      '<input type="hidden" data-part="time" id="' + timeName + '" name="' + timeName + '" />' +
+      '<input type="hidden" data-part="period" id="' + periodName + '" name="' + periodName + '" />';
 
     root.dataset.ready = "1";
     ["day", "month", "year", "hour", "minute", "notime"].forEach(function (part) {
       qs(root, part).addEventListener("change", function () {
         if (part === "month" || part === "year") rebuildDays(root);
         syncHidden(root);
+        paintHours(root);
       });
     });
-    fill(root, root.getAttribute("data-date") || "", root.getAttribute("data-time") || "");
+    qs(root, "hours").addEventListener("click", function (e) {
+      const btn = e.target.closest(".hour-row");
+      if (!btn) return;
+      qs(root, "span").value = btn.getAttribute("data-hour") || "";
+      syncHidden(root);
+      markHour(root);
+    });
+    const cityId = root.getAttribute("data-city-input");
+    const cityInput = cityId ? document.getElementById(cityId) : null;
+    if (cityInput) {
+      cityInput.addEventListener("change", function () { paintHours(root); });
+      cityInput.addEventListener("input", function () { paintHours(root); });
+    }
+    fill(root, root.getAttribute("data-date") || "", root.getAttribute("data-time") || "", root.getAttribute("data-period") || "");
+    paintHours(root);
+  }
+
+  function hourRows() {
+    let html = '<button type="button" class="hour-row" data-hour=""><span>Весь день</span><b></b></button>';
+    for (let h = 0; h < 24; h++) {
+      const id = pad(h);
+      const next = h === 23 ? "24:00" : pad(h + 1) + ":00";
+      html += '<button type="button" class="hour-row" data-hour="' + id + '"><span>' + id + ":00–" + next + '</span><b data-sign="' + id + '"></b></button>';
+    }
+    return html;
   }
 
   function mountAll() {
@@ -150,10 +242,12 @@
   window.BirthFields = {
     mountAll: mountAll,
     fill: fill,
+    paintHours: paintHours,
     value: function (root) {
       return {
         date: qs(root, "date").value,
-        time: qs(root, "time").value
+        time: qs(root, "time").value,
+        period: qs(root, "period").value
       };
     }
   };
