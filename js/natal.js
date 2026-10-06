@@ -279,7 +279,7 @@
       if (!blob) return;
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "zenit-karta.png";
+      a.download = "lunnaya-nit.png";
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
     }, "image/png");

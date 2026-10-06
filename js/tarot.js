@@ -23,16 +23,31 @@ window.ZENIT_TAROT = [
   { n: 21, name: "Мир", upright: "Круг закрывается. Можно выдохнуть и не начинать следующий сюжет из тревоги, что «мало».", reversed: "Почти готово, но не доведено. Сегодня полезнее точка, чем новый старт ради ощущения движения." }
 ];
 
+function localDay(d) {
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return d.getFullYear() + "-" + m + "-" + day;
+}
+
 window.cardOfDay = function cardOfDay(isoDate) {
-  const day = isoDate || new Date().toISOString().slice(0, 10);
+  const day = isoDate || localDay(new Date());
   let h = 2166136261;
   const s = "zenit:" + day;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
-  const idx = Math.abs(h) % window.ZENIT_TAROT.length;
-  const reversed = (Math.abs(h >> 8) % 2) === 1;
+  // Множитель FNV даёт 1 по модулю 22, поэтому соседние даты шли по колоде подряд.
+  h >>>= 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x7feb352d);
+  h >>>= 0;
+  h ^= h >>> 15;
+  h = Math.imul(h, 0x846ca68b);
+  h >>>= 0;
+  h ^= h >>> 16;
+  const idx = (h >>> 0) % window.ZENIT_TAROT.length;
+  const reversed = ((h >>> 16) & 1) === 1;
   const card = window.ZENIT_TAROT[idx];
   return {
     day: day,

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" fill="none">
+  <g stroke="#000" stroke-linecap="round">
+    <path d="M460-30C620 40 860 70 1120 24" stroke-width="1.15" opacity=".9"/>
+    <path d="M460-30C640 90 920 150 1280 110" stroke-width=".9" opacity=".72"/>
+    <path d="M460-30C700 160 980 250 1360 280" stroke-width="1.05" opacity=".8"/>
+    <path d="M460-30C680 240 900 390 1240 520" stroke-width=".85" opacity=".62"/>
+    <path d="M460-30C640 300 760 520 980 780" stroke-width=".95" opacity=".7"/>
+    <path d="M460-30C520 280 540 520 620 860" stroke-width=".75" opacity=".5"/>
+    <path d="M460-30C380 260 250 430 90 620" stroke-width="1" opacity=".74"/>
+    <path d="M460-30C300 180 140 200-20 140" stroke-width=".9" opacity=".66"/>
+    <path d="M460-30C340 80 180 40-40 70" stroke-width=".8" opacity=".55"/>
+    <path d="M460-30C200 320 80 560-30 820" stroke-width=".85" opacity=".58"/>
+    <path d="M460-30C560 360 700 560 820 900" stroke-width=".7" opacity=".46"/>
+    <path d="M460-30C800 340 1100 500 1420 640" stroke-width=".8" opacity=".52"/>
+    <path d="M1480 860C1240 720 1040 690 820 740" stroke-width=".75" opacity=".4"/>
+    <path d="M1500 520C1220 470 980 520 760 640" stroke-width=".7" opacity=".36"/>
+    <path d="M-60 780C180 700 420 680 680 720" stroke-width=".7" opacity=".34"/>
+    <path d="M80 920C260 760 520 700 860 760" stroke-width=".65" opacity=".32"/>
+  </g>
+</svg>
