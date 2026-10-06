@@ -1,3 +1,20 @@
+import { Resvg, initWasm } from "@resvg/resvg-wasm";
+import wasmModule from "@resvg/resvg-wasm/index_bg.wasm";
+import { fontBase64 } from "./font.js";
+import { matrixChart, matrixSvg } from "./matrix-fig.js";
+
+let resvgReady = null;
+
+function ensureResvg() {
+  if (!resvgReady) {
+    resvgReady = initWasm(wasmModule).catch(function (err) {
+      resvgReady = null;
+      throw err;
+    });
+  }
+  return resvgReady;
+}
+
 export class Queue {
   constructor(ctx) {
     this.ctx = ctx;
@@ -13,6 +30,7 @@ export class Queue {
       const row = await this.ctx.storage.get(body.id);
       if (!row) return Response.json({ ok: false });
       row.message_id = body.message_id;
+      if (body.hasPhoto) row.hasPhoto = true;
       await this.ctx.storage.put(row.id, row);
       return Response.json({ ok: true, row: row });
     }
@@ -69,20 +87,6 @@ function clean(value, max) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, max);
 }
 
-const ARCANA = [
-  "", "Маг", "Верховная Жрица", "Императрица", "Император", "Иерофант", "Влюблённые",
-  "Колесница", "Сила", "Отшельник", "Колесо Фортуны", "Справедливость", "Повешенный",
-  "Смерть", "Умеренность", "Дьявол", "Башня", "Звезда", "Луна", "Солнце", "Суд", "Мир", "Шут"
-];
-
-function toArcana(n) {
-  let v = Math.abs(Number(n) || 0);
-  while (v > 22) {
-    v = String(v).split("").reduce(function (s, d) { return s + Number(d); }, 0);
-  }
-  return v;
-}
-
 function parseBirth(iso) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || "")) return null;
   const parts = iso.split("-");
@@ -98,17 +102,25 @@ function parseBirth(iso) {
   return { y: y, m: m, d: d, iso: iso };
 }
 
-function matrixCenter(birth) {
-  const a = toArcana(birth.d);
-  const b = toArcana(birth.m);
-  const c = toArcana(String(birth.y).split("").reduce(function (s, d) { return s + Number(d); }, 0));
-  const d = toArcana(a + b + c);
-  const n = toArcana(a + b + c + d);
-  const pad = function (v) { return String(v).padStart(2, "0"); };
-  return {
-    pretty: pad(birth.d) + "." + pad(birth.m) + "." + birth.y,
-    line: n + " " + (ARCANA[n] || "")
-  };
+async function matrixPng(chart) {
+  await ensureResvg();
+  const binary = atob(fontBase64);
+  const font = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) font[i] = binary.charCodeAt(i);
+  const resvg = new Resvg(matrixSvg(chart), {
+    font: {
+      fontBuffers: [font],
+      defaultFontFamily: "PT Sans",
+      sansSerifFamily: "PT Sans"
+    },
+    fitTo: { mode: "width", value: 900 },
+    background: "#fbf7f0"
+  });
+  try {
+    return resvg.render().asPng();
+  } finally {
+    resvg.free();
+  }
 }
 
 function newId() {
@@ -133,12 +145,12 @@ function cardText(row) {
     "Имя: " + row.name,
     "Связь: " + row.contact
   ];
-  if (row.birthPretty && row.matrixCenter) {
-    lines.push("Дата: " + row.birthPretty);
-    lines.push("Центр матрицы: " + row.matrixCenter);
-  }
+  if (row.birthPretty) lines.push("Дата: " + row.birthPretty);
   lines.push("", row.question, "", status);
-  return lines.join("\n");
+  let text = lines.join("\n");
+  if (row.hasPhoto && text.length > 1024) text = text.slice(0, 1020) + "…";
+  if (!row.hasPhoto && text.length > 4096) text = text.slice(0, 4090) + "…";
+  return text;
 }
 
 function keyboard(row) {
@@ -170,11 +182,34 @@ async function queue(env, body) {
   return res.json();
 }
 
+async function sendPhoto(env, png, caption, markup) {
+  const form = new FormData();
+  form.append("chat_id", String(env.CHAT_ID || "").trim());
+  form.append("caption", caption);
+  form.append("reply_markup", JSON.stringify(markup));
+  form.append("photo", new Blob([png], { type: "image/png" }), "matrix.png");
+  const res = await fetch("https://api.telegram.org/bot" + env.BOT_TOKEN + "/sendPhoto", {
+    method: "POST",
+    body: form
+  });
+  return res.json().catch(function () { return { ok: false }; });
+}
+
 async function editCard(env, row) {
   if (!row.message_id) return;
   const markup = keyboard(row);
+  const chatId = String(env.CHAT_ID || "").trim();
+  if (row.hasPhoto) {
+    await tg(env, "editMessageCaption", {
+      chat_id: chatId,
+      message_id: row.message_id,
+      caption: cardText(row),
+      reply_markup: markup
+    });
+    return;
+  }
   await tg(env, "editMessageText", {
-    chat_id: String(env.CHAT_ID || "").trim(),
+    chat_id: chatId,
     message_id: row.message_id,
     text: cardText(row),
     reply_markup: markup
@@ -197,29 +232,49 @@ async function createRequest(request, env, origin) {
   if (question.length < 15) return json({ ok: false, error: "Напишите вопрос чуть подробнее." }, 400, origin);
   if (birthRaw && !birth) return json({ ok: false, error: "Проверьте дату рождения." }, 400, origin);
 
-  const center = birth ? matrixCenter(birth) : null;
+  const chart = birth ? matrixChart(birth) : null;
   const row = {
     id: newId(),
     name: name,
     contact: contact,
     question: question,
     birth: birth ? birth.iso : "",
-    birthPretty: center ? center.pretty : "",
-    matrixCenter: center ? center.line : "",
+    birthPretty: chart ? chart.pretty : "",
+    hasPhoto: false,
     status: "new",
     created_at: new Date().toISOString()
   };
+  let png = null;
+  if (chart) {
+    try { png = await matrixPng(chart); } catch (e) { png = null; }
+  }
   await queue(env, { op: "create", row: row });
-  const sent = await tg(env, "sendMessage", {
-    chat_id: String(env.CHAT_ID || "").trim(),
-    text: cardText(row),
-    reply_markup: keyboard(row)
-  });
+  let sent = null;
+  if (png) {
+    row.hasPhoto = true;
+    sent = await sendPhoto(env, png, cardText(row), keyboard(row));
+    if (!sent.ok || !sent.result) {
+      row.hasPhoto = false;
+      sent = null;
+    }
+  }
+  if (!sent) {
+    sent = await tg(env, "sendMessage", {
+      chat_id: String(env.CHAT_ID || "").trim(),
+      text: cardText(row),
+      reply_markup: keyboard(row)
+    });
+  }
   if (!sent.ok || !sent.result) {
     await queue(env, { op: "drop", id: row.id });
     return json({ ok: false, error: "Заявка не ушла тарологам. Попробуйте ещё раз чуть позже." }, 502, origin);
   }
-  await queue(env, { op: "attach", id: row.id, message_id: sent.result.message_id });
+  await queue(env, {
+    op: "attach",
+    id: row.id,
+    message_id: sent.result.message_id,
+    hasPhoto: row.hasPhoto
+  });
   return json({ ok: true }, 200, origin);
 }
 

@@ -1,4 +1,5 @@
 telegram.json
 worker/.dev.vars
 worker/.wrangler
+worker/node_modules
 

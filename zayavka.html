@@ -8,7 +8,7 @@
   <title>Заявка тарологу — Лунная нить</title>
   <link rel="icon" href="favicon.svg?v=2" />
   <style>html,body{background:#110f0d;color:#fbf6ee}</style>
-  <link rel="stylesheet" href="css/site.css?v=30" />
+  <link rel="stylesheet" href="css/site.css?v=33" />
 </head>
 <body>
   <header class="topbar sans">
@@ -44,14 +44,19 @@
       </div>
       <label class="time-unknown" for="z-gift">
         <input id="z-gift" type="checkbox" />
-        <span>Хочу подарок</span>
+        <span>Хочу в подарок матрицу судьбы</span>
       </label>
-      <p class="hint">Галочка открывает матрицу после отправки. Дата и центр уходят тарологам в любом случае.</p>
+      <p class="hint">Матрица будет рассчитана после отправки заявки</p>
       <label for="z-question">Вопрос</label>
       <textarea id="z-question" name="question" maxlength="1500" required></textarea>
       <div style="position:absolute;left:-9999px;height:0;overflow:hidden" aria-hidden="true">
         <label>Сайт<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
       </div>
+      <label class="time-unknown" for="z-consent">
+        <input id="z-consent" name="consent" type="checkbox" />
+        <span>Соглашаюсь на обработку данных из этой заявки</span>
+      </label>
+      <p class="hint"><a href="docs/soglasie.html">Согласие</a>, <a href="docs/politika.html">политика</a> и <a href="docs/soglashenie.html">пользовательское соглашение</a>.</p>
       <button class="btn" type="submit">Отправить заявку</button>
     </form>
     <p id="zayavka-note" class="notice" hidden></p>
@@ -66,9 +71,7 @@
     </div>
   </main>
 
-  <footer class="site wrap">
-    <p>Диагноз не ставим, возврат человека не обещаем, здоровье не разбираем.</p>
-  </footer>
+  <footer class="site wrap"><p><a href="docs/index.html">Документы</a></p></footer>
   <nav class="bottom-nav">
     <a href="index.html">Карта</a>
     <a href="para.html">Пара</a>
@@ -77,8 +80,8 @@
   </nav>
   <script src="js/site.js?v=7"></script>
   <script src="js/tarot.js?v=3"></script>
-  <script src="js/matrix.js?v=2"></script>
+  <script src="js/matrix.js?v=3"></script>
   <script src="js/zayavka-config.js?v=2"></script>
-  <script src="js/zayavka.js?v=3"></script>
+  <script src="js/zayavka.js?v=4"></script>
 </body>
 </html>
